@@ -121,8 +121,13 @@ DOWNLOAD_MOD_MENU() {
     local DOWNLOAD_LINK=$(echo "${API_RESPONSE}" | jq -r '.assets[] | select(.name | contains(".rar")) | .browser_download_url' | head -n 1)
 
     if [ -z "${DOWNLOAD_LINK}" ] || [ "${DOWNLOAD_LINK}" == "null" ]; then
-        echo "无法获取MOD Patch文件下载链接"
-        exit 1
+        # 修改：查找name中含有.zip的文件，避免后缀不一致导致的无法获取链接
+        local FILENAME="MOD_MENU.zip"
+        local DOWNLOAD_LINK=$(echo "${API_RESPONSE}" | jq -r '.assets[] | select(.name | contains(".zip")) | .browser_download_url' | head -n 1)
+        if [ -z "${DOWNLOAD_LINK}" ] || [ "${DOWNLOAD_LINK}" == "null" ]; then
+            echo "无法获取MOD Patch文件下载链接"
+            exit 1
+        fi
     fi
 
     curl -L -o "${DOWNLOAD_DIR}/${FILENAME}" "${DOWNLOAD_LINK}"
@@ -133,18 +138,11 @@ DOWNLOAD_MOD_MENU() {
         exit 1
     fi
 
-    # 修改：使用unrar解压而不是unzip
-    if command -v unrar &> /dev/null; then
-        echo "使用unrar解压文件..."
-        unrar x -o+ "${DOWNLOAD_DIR}/${FILENAME}" "${DOWNLOAD_DIR}/JMBQ"
+    if command -v 7z &> /dev/null; then
+        7z x -y "${DOWNLOAD_DIR}/${FILENAME}" -o"${DOWNLOAD_DIR}/JMBQ"
     else
-        echo "未找到unrar命令，尝试使用7z解压..."
-        if command -v 7z &> /dev/null; then
-            7z x -y "${DOWNLOAD_DIR}/${FILENAME}" -o"${DOWNLOAD_DIR}/JMBQ"
-        else
-            echo "错误: 未找到unrar或7z工具，无法解压RAR文件！"
-            exit 1
-        fi
+        echo "错误: 未找到7z工具，无法解压！"
+        exit 1
     fi
     
     if [ $? -ne 0 ]; then
