@@ -48,7 +48,7 @@ jobs:
 
       # 步骤6：创建 Release 并上传所有分卷文件
       - name: Release and Upload Assets
-        uses: ncipollo/release-action@v2
+        uses: ncipollo/release-action@v1
         with:
           tag: "${{ env.JMBQ_VERSION }}-APK"
           name: "AzurLane JMBQ ${{ env.JMBQ_VERSION }} Build APK"
